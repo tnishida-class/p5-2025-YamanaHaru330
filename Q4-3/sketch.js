@@ -19,6 +19,7 @@ function draw(){
   for(let i = 0; i < targets.length; i++){
     let t = targets[i];
     fill(0);
+    noStroke();
     ellipse(t.x, t.y, t.size);
     t.x += t.vx;
     t.y += t.vy;
@@ -29,6 +30,7 @@ function draw(){
   for(let i = 0; i < balls.length; i++){
     let b = balls[i];
     fill(255);
+    noStroke();
     ellipse(b.x, b.y, b.size);
     b.x += b.vx;
     b.y += b.vy;
@@ -49,6 +51,17 @@ function draw(){
 
   if(frameCount % 20 === 0) { // 20フレームごとに新しい的を追加する
     // BLANK[1] 新しい的オブジェクトを作成して targets 配列に追加しよう
+    // 画面中心からランダムな方向へ進むように vx, vy を決める
+    let angle = random(TWO_PI);
+    let speed = random(1, 4);
+    let t = {
+      x: width / 2,
+      y: height / 2,
+      size: 12,      // 初期サイズ（直径）
+      vx: cos(angle) * speed,
+      vy: sin(angle) * speed
+    };
+    targets.push(t);
   }
 
   // ボールに当たった or 大きくなりすぎた的を配列から削除する
@@ -59,7 +72,13 @@ function draw(){
       let hit = false;
       for(let j = 0; j < balls.length; j++){ // すべてのボールと衝突判定
         let b = balls[j];
-        // BLANK[2]
+        // BLANK[2] 衝突判定：ボールと的の中心距離が半径和未満なら当たった
+        let d = dist(b.x, b.y, t.x, t.y);
+        let rSum = (b.size + t.size) / 2;
+        if(d < rSum){
+          hit = true;
+          break;
+        }
       }
       if(!hit) activeTargets.push(t); // 衝突していなければ生き残る
     }
@@ -70,7 +89,9 @@ function draw(){
 function mouseDragged(){
   const dx = mouseX - pmouseX;
   const dy = mouseY - pmouseY;
-  if(mag(dx, dy) > 5){
+  // p5.js には mag(x,y) のグローバル関数は無いので長さはこう計算するのが安全
+  const speed = sqrt(dx*dx + dy*dy);
+  if(speed > 5){
     const b = { x: mouseX, y: mouseY, size: 20, vx: dx, vy: dy };
     balls.push(b);
   }
